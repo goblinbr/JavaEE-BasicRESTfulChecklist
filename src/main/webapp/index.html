@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Checklist</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <style>
+      .divLeftCol {
+        width: 20px;
+      }
+      
+      div {
+        padding-left: 2px;
+        padding-right: 2px;
+        padding-top: 2px;
+        padding-bottom: 2px;
+      }
+      
+      .divTable {
+        display: table;
+      }
+
+      .divRow  {
+        display: table-row;
+      }
+
+      .divLeftCol, .divRightCol {
+        display: table-cell;
+        //border-bottom: 1px solid black;
+      }
+      
+    </style>
+  </head>
+<body>
+  <div style="width: 700px; margin: auto;" >
+    <span style="padding-right: 10px;" >ITEM</span><input type="button" value="+" onclick="itemEvent(0);" style="width: 30px; margin: auto;"/>
+  </div>
+  <div id="dvItem" style="width: 700px; margin: auto; visibility: hidden; height: 0px;" >
+    Item:
+    <input type="text" id="txDescription" style="width: 70%"/>
+    <input onclick="addItem();" type="button" id="btChangeItem" value="ADD" />
+    <input onclick="cancelItem();" type="button" id="btCancelItem" value="CANCEL" />
+  </div>
+  <div style="width: 700px; margin: auto;" id="tablebody" class="divTable">
+  </div>
+
+  <script>
+    var qtyByPage = 0;
+    var page = 0;
+
+    load();
+
+    var totalQty = 0;
+    getTotalQty();
+
+
+    function getTotalQty() {
+      var xmlhttp = new XMLHttpRequest();
+      var url = "http://localhost:8080/checklist/webresources/rest/item/count";
+
+      xmlhttp.onreadystatechange = function() {
+          if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+            totalQty = xmlhttp.responseText;
+          }
+      };
+      xmlhttp.open("GET", url, true);
+      xmlhttp.send();
+    }
+
+    function load() {
+      var xmlhttp = new XMLHttpRequest();
+      var url = "http://localhost:8080/checklist/webresources/rest/item/" + qtyByPage + "/" + page;
+
+      xmlhttp.onreadystatechange = function() {
+          if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+              var myArr = JSON.parse(xmlhttp.responseText);
+              populateTable(myArr);
+          }
+      };
+      xmlhttp.open("GET", url, true);
+      xmlhttp.setRequestHeader("Accept", "application/json");
+      xmlhttp.send();
+    }
+
+    function populateTable(arr) {
+        var out = '';
+        var i;
+        for(i = 0; i < arr.length; i++) {
+          out += '<div class="divRow"><div class="divLeftCol"><input type="checkbox" id="ck{ID}" {IS_CHECKED} /></div><div class="divRightCol">{DESCRIPTION}</div></div>';
+          out = out.replace( "{ID}", arr[i].id );
+          out = out.replace( "{DESCRIPTION}", arr[i].description );
+          out = out.replace( "{IS_CHECKED}", ( arr[i].isChecked ) ? 'checked="checked"' : '' );
+        }
+        document.getElementById("tablebody").innerHTML = out;
+    }
+
+    function itemEvent( id ) {
+      document.getElementById("dvItem").style.visibility = "visible";
+      document.getElementById("dvItem").style.height = "30px";
+      document.getElementById("txDescription").value = "";
+    }
+
+    function addItem() {
+      var xmlhttp = new XMLHttpRequest();
+      var url = "http://localhost:8080/checklist/webresources/rest/item";
+
+      xmlhttp.onreadystatechange = function() {
+          if (xmlhttp.readyState == 4 && xmlhttp.status == 204) {
+            load();
+          }
+          if (xmlhttp.readyState == 4 && xmlhttp.status == 406) {
+            alert( xmlhttp.responseText );
+          }
+      };
+      
+      var item = document.getElementById("txDescription").value;
+      
+      xmlhttp.open("POST", url, true);
+      //xmlhttp.setRequestHeader("Accept", "application/json");
+      xmlhttp.setRequestHeader("Content-Type", "application/json");
+      xmlhttp.send( JSON.stringify( {description:item, isChecked:"false"} ) );
+    }
+
+    function cancelItem() {
+      document.getElementById("dvItem").style.visibility = "hidden";
+      document.getElementById("dvItem").style.height = "0px";
+    }
+
+  </script>
+
+</body>
+</html>
