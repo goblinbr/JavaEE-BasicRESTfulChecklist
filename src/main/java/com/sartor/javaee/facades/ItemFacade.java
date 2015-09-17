@@ -79,4 +79,20 @@ public class ItemFacade extends BaseCrudFacade<Item, Long> {
   public String countREST() {
     return String.valueOf( super.count() );
   }
+
+  @PUT
+  @Path( "check/{id}" )
+  public void check( @PathParam( "id" ) Long id ) {
+    Item item = find( id );
+    item.setIsChecked( true );
+    edit( item );
+  }
+
+  @PUT
+  @Path( "uncheck/{id}" )
+  public void uncheck( @PathParam( "id" ) Long id ) {
+    Item item = find( id );
+    item.setIsChecked( false );
+    edit( item );
+  }
 }
